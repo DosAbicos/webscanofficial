@@ -70,9 +70,11 @@ const Home = () => {
         return;
       }
       
+      toast.info('Экспорт начат...');
       await exportToExcel(productsWithBarcodes);
-      toast.success(`Экспортировано товаров: ${productsWithBarcodes.length}`);
+      toast.success(`Экспортировано: ${productsWithBarcodes.length} товаров`);
     } catch (error) {
+      console.error('Export error:', error);
       toast.error('Ошибка при экспорте файла');
     }
   };
