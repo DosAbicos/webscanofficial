@@ -26,13 +26,18 @@ export const ScannerPage = () => {
   useEffect(() => {
     initDB();
     
-    // Check if we're coming from edit mode
+    // Check if we're coming from edit mode (rescan mode)
     const editingProduct = sessionStorage.getItem('editingProduct');
     if (editingProduct) {
       try {
         const product = JSON.parse(editingProduct);
         setSelectedProduct(product);
+        setActualQuantity(product.quantity || '');
         toast.info(`Пересканирование штрихкода для: ${product.name}`);
+        // Auto-start scanner in rescan mode
+        setTimeout(() => {
+          startScanner();
+        }, 500);
       } catch (error) {
         console.error('Error parsing editing product:', error);
       }
