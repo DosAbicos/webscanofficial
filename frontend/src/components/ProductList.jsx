@@ -149,51 +149,51 @@ export const ProductList = ({ products, hasBarcode, onUpdate }) => {
                   ) : (
                     <>
                       {product.barcode && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
-                          <Barcode className="h-4 w-4 text-primary shrink-0" />
-                          <span className="text-sm font-mono flex-1 truncate">
-                            {product.barcode}
-                          </span>
-                        </div>
+                        <>
+                          <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-md">
+                            <Barcode className="h-4 w-4 text-primary shrink-0" />
+                            <span className="text-sm font-mono flex-1 truncate">
+                              {product.barcode}
+                            </span>
+                          </div>
+
+                          {/* Actual Quantity - Only for products WITH barcode */}
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-muted-foreground shrink-0">
+                              По факту:
+                            </label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="0"
+                              value={product.actual_quantity !== null ? product.actual_quantity : ''}
+                              onChange={(e) => handleQuantityUpdate(product.id, e.target.value)}
+                              className="h-9 flex-1"
+                            />
+                            <span className="text-sm text-muted-foreground shrink-0">шт</span>
+                          </div>
+
+                          {/* Action Buttons - Only for products WITH barcode */}
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(product)}
+                              className="flex-1"
+                            >
+                              <Edit2 className="h-4 w-4 mr-2" />
+                              Редактировать
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </>
                       )}
-
-                      {/* Actual Quantity */}
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-muted-foreground shrink-0">
-                          По факту:
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0"
-                          value={product.actual_quantity !== null ? product.actual_quantity : ''}
-                          onChange={(e) => handleQuantityUpdate(product.id, e.target.value)}
-                          className="h-9 flex-1"
-                        />
-                        <span className="text-sm text-muted-foreground shrink-0">шт</span>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(product)}
-                          className="flex-1"
-                        >
-                          <Edit2 className="h-4 w-4 mr-2" />
-                          Редактировать
-                        </Button>
-                        {product.barcode && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
                     </>
                   )}
                 </div>
