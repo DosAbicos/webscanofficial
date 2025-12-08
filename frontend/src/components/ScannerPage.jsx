@@ -137,7 +137,27 @@ export const ScannerPage = () => {
 
     try {
       const results = await searchProducts(query);
-      setSearchResults(results);
+      
+      // Filter out products that already have barcodes
+      // (unless we're in rescan mode - then allow the current product)
+      const editingProduct = sessionStorage.getItem('editingProduct');
+      let editingProductId = null;
+      if (editingProduct) {
+        try {
+          editingProductId = JSON.parse(editingProduct).id;
+        } catch (e) {}
+      }
+      
+      const filteredResults = results.filter(p => {
+        // If in rescan mode, allow the product being rescanned
+        if (editingProductId && p.id === editingProductId) {
+          return true;
+        }
+        // Otherwise, only show products without barcodes
+        return !p.barcode || p.barcode === '';
+      });
+      
+      setSearchResults(filteredResults);
     } catch (error) {
       toast.error('Ошибка поиска');
     }
