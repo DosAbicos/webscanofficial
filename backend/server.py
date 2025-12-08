@@ -107,7 +107,27 @@ async def export_excel(products: List[Product]):
         for i, p in enumerate(products[:3]):
             logger.info(f"Product {i+1}: '{p.name}' | Barcode: {p.barcode} | Qty: {p.actual_quantity}")
         
+        # STEP 1: Clear all existing data in columns 8 and 9
+        # This ensures deleted products are removed from export
+        logger.info("Clearing old barcode and quantity data...")
+        clear_row = 9
+        cleared_count = 0
+        
+        while clear_row < original_sheet.nrows:
+            try:
+                # Clear barcode (column 8) and quantity (column 9)
+                sheet.write(clear_row, 8, '')
+                sheet.write(clear_row, 9, '')
+                cleared_count += 1
+                clear_row += 1
+            except:
+                break
+        
+        logger.info(f"Cleared {cleared_count} rows")
+        
+        # STEP 2: Write new data only for products with barcodes
         updated_count = 0
+        row_idx = 9
         
         while row_idx < original_sheet.nrows:
             try:
