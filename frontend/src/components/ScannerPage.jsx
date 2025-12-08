@@ -114,6 +114,7 @@ export const ScannerPage = () => {
     setSelectedProduct(product);
     setSearchResults([]);
     setSearchQuery('');
+    setStep(3); // Move to quantity input step
   };
 
   const handleSave = async () => {
