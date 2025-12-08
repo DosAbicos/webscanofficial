@@ -158,6 +158,131 @@ async def export_excel_debug(products: List[Product]):
         return {"error": str(e)}
 
 
+@api_router.post("/export-excel-minimal")
+async def export_excel_minimal(products: List[Product]):
+    """
+    Generate a clean .xlsx file from scratch using openpyxl.
+    This endpoint creates a simpler file structure that should be more compatible
+    with Android and Windows Excel readers.
+    """
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, Alignment, PatternFill
+        
+        logger.info(f"Starting minimal Excel export with {len(products)} products")
+        
+        # Read original file to extract structure and data
+        original_path = '/app/frontend/public/sample_file.xls'
+        rb = xlrd.open_workbook(original_path)
+        original_sheet = rb.sheet_by_index(0)
+        
+        # Create new workbook from scratch
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Inventory"
+        
+        # Create product map by nomenclature_code
+        product_map = {p.nomenclature_code: p for p in products if p.nomenclature_code}
+        
+        # Copy all data from original file first
+        logger.info(f"Copying {original_sheet.nrows} rows from original file...")
+        for row_idx in range(original_sheet.nrows):
+            for col_idx in range(original_sheet.ncols):
+                cell = original_sheet.cell(row_idx, col_idx)
+                if cell.value is not None and cell.value != '':
+                    ws.cell(row=row_idx+1, column=col_idx+1, value=cell.value)
+        
+        # Now update products data (barcodes and quantities)
+        updated_count = 0
+        row_idx = 9  # Start from row 10 (Excel uses 1-based indexing)
+        
+        while row_idx < original_sheet.nrows:
+            try:
+                cell_a = original_sheet.cell(row_idx, 0)
+                cell_b = original_sheet.cell(row_idx + 1, 1) if row_idx + 1 < original_sheet.nrows else None
+                
+                if not cell_a.value:
+                    row_idx += 1
+                    continue
+                
+                cell_value = str(cell_a.value).strip()
+                next_cell_value = str(cell_b.value).strip() if cell_b else ''
+                
+                if next_cell_value == 'Кол.':
+                    clean_name = cell_value.replace(' ', '')
+                    is_code = clean_name.isdigit()
+                    
+                    if not is_code and cell_value and cell_value != 'Итого':
+                        # Get nomenclature code from 2 rows down
+                        nomenclature_code = ''
+                        if row_idx + 2 < original_sheet.nrows:
+                            code_cell = original_sheet.cell(row_idx + 2, 0)
+                            potential_code = str(code_cell.value).strip()
+                            clean_code = potential_code.replace(' ', '')
+                            if clean_code.isdigit():
+                                nomenclature_code = potential_code
+                        
+                        # Match by nomenclature code
+                        if nomenclature_code and nomenclature_code in product_map:
+                            product = product_map[nomenclature_code]
+                            
+                            # Write barcode to column 9 (I in Excel, 0-indexed col 8)
+                            if product.barcode:
+                                ws.cell(row=row_idx+1, column=9, value=product.barcode)
+                                # Also write to code row
+                                if row_idx + 2 < original_sheet.nrows:
+                                    ws.cell(row=row_idx+3, column=9, value=product.barcode)
+                                logger.info(f"  ✓ Wrote barcode '{product.barcode}' for '{product.name[:40]}'")
+                            
+                            # Write actual quantity to column 10 (J in Excel, 0-indexed col 9)
+                            if product.actual_quantity is not None:
+                                ws.cell(row=row_idx+1, column=10, value=product.actual_quantity)
+                                # Also write to code row
+                                if row_idx + 2 < original_sheet.nrows:
+                                    ws.cell(row=row_idx+3, column=10, value=product.actual_quantity)
+                                logger.info(f"  ✓ Wrote quantity {product.actual_quantity} for '{product.name[:40]}'")
+                            
+                            updated_count += 1
+                    
+                    row_idx += 2
+                else:
+                    row_idx += 1
+            except Exception as e:
+                logger.error(f"Error processing row {row_idx}: {e}")
+                row_idx += 1
+        
+        logger.info(f"Updated {updated_count} products in Excel")
+        
+        # Save to file with simple format
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        output_path = f'/tmp/inventory_export_{timestamp}.xlsx'
+        wb.save(output_path)
+        
+        # Verify file was created
+        import os
+        if os.path.exists(output_path):
+            file_size = os.path.getsize(output_path)
+            logger.info(f"✓ Excel file created: {output_path} ({file_size / 1024:.1f} KB)")
+        else:
+            raise Exception("File was not created")
+        
+        return FileResponse(
+            output_path,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            filename=f'inventory_export_{timestamp}.xlsx',
+            headers={
+                'Content-Disposition': f'attachment; filename="inventory_export_{timestamp}.xlsx"',
+                'Cache-Control': 'no-cache'
+            }
+        )
+    
+    except Exception as e:
+        logger.error(f"Error in export_excel_minimal: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
+
+
 @api_router.post("/export-excel")
 async def export_excel(products: List[Product]):
     """
