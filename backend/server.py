@@ -151,7 +151,7 @@ async def export_excel_debug(products: List[Product]):
             'matches_found': len(matches),
             'unmatched': len(unmatched),
             'matches': matches[:20],  # First 20
-            'unmatched_products': [{'name': p.name[:50], 'barcode': p.barcode} for p in unmatched[:10]]
+            'unmatched_products': [{'name': p.name[:50], 'code': p.nomenclature_code, 'barcode': p.barcode} for p in unmatched[:10]]
         }
     except Exception as e:
         logger.error(f"Debug error: {e}")
