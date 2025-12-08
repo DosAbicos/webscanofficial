@@ -211,13 +211,11 @@ test_plan:
     - "Home Page Display and Navigation"
     - "Product List and Search Functionality"
     - "Product Edit and Save Functionality"
-    - "Scanner Page and Navigation"
+  stuck_tasks: 
     - "Product Search in Scanner"
     - "IndexedDB Data Persistence"
-    - "Mobile Responsiveness"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "high_first"
+  test_all: false
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "testing"
