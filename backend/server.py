@@ -286,10 +286,8 @@ async def export_excel(products: List[Product]):
         # Convert to .xlsx for better compatibility with Android
         try:
             import openpyxl
-            from openpyxl import load_workbook
             
             # Read .xls and convert to .xlsx
-            import xlrd
             old_wb = xlrd.open_workbook(output_path)
             old_sheet = old_wb.sheet_by_index(0)
             
