@@ -236,9 +236,21 @@ export const ScannerPage = () => {
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Шаг 1: Сканирование штрихкода</CardTitle>
+              <CardTitle className="text-lg">
+                {selectedProduct ? 'Пересканирование штрихкода' : 'Шаг 1: Сканирование штрихкода'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {selectedProduct && (
+                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg mb-4">
+                  <p className="text-sm font-medium text-muted-foreground">Товар:</p>
+                  <p className="font-semibold text-sm mt-1 line-clamp-2">{selectedProduct.name}</p>
+                  {selectedProduct.nomenclature_code && (
+                    <p className="text-xs text-muted-foreground mt-1">№ {selectedProduct.nomenclature_code}</p>
+                  )}
+                </div>
+              )}
+              
               <div
                 id="scanner-container"
                 ref={scannerRef}
@@ -257,7 +269,7 @@ export const ScannerPage = () => {
                 ) : (
                   <>
                     <Camera className="h-5 w-5 mr-2" />
-                    Начать сканирование
+                    {selectedProduct ? 'Отсканировать новый штрихкод' : 'Начать сканирование'}
                   </>
                 )}
               </Button>
@@ -267,6 +279,20 @@ export const ScannerPage = () => {
                   <p className="text-sm font-medium text-success">Отсканировано:</p>
                   <p className="text-lg font-mono mt-1">{scannedBarcode}</p>
                 </div>
+              )}
+              
+              {selectedProduct && (
+                <Button
+                  onClick={() => {
+                    sessionStorage.removeItem('editingProduct');
+                    navigate('/');
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Отмена
+                </Button>
               )}
             </CardContent>
           </Card>
