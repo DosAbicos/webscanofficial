@@ -126,20 +126,30 @@ async def export_excel(products: List[Product]):
                     is_code = clean_name.isdigit()
                     
                     if not is_code and cell_value and cell_value != 'Итого':
+                        product = None
+                        
+                        # Try exact match first
                         if cell_value in product_map:
                             product = product_map[cell_value]
+                            logger.debug(f"Exact match: '{cell_value[:40]}'")
                         else:
-                            # Try to find partial match (in case of truncation)
-                            logger.warning(f"Exact match not found for '{cell_value[:50]}...'")
-                            product = None
-                            for prod_name in product_map.keys():
-                                if cell_value.startswith(prod_name[:50]) or prod_name.startswith(cell_value[:50]):
-                                    logger.info(f"Found partial match: '{prod_name[:50]}'")
-                                    product = product_map[prod_name]
-                                    break
+                            # Try flexible matching (for truncated names in Excel)
+                            excel_name_normalized = cell_value.lower().strip()
+                            
+                            for prod_name, prod in product_map.items():
+                                prod_name_normalized = prod_name.lower().strip()
+                                
+                                # Check if they're similar (start with same text)
+                                if len(excel_name_normalized) > 10 and len(prod_name_normalized) > 10:
+                                    # Compare first N characters
+                                    compare_len = min(len(excel_name_normalized), len(prod_name_normalized), 40)
+                                    if excel_name_normalized[:compare_len] == prod_name_normalized[:compare_len]:
+                                        product = prod
+                                        logger.info(f"Flexible match: Excel='{cell_value[:30]}...' DB='{prod_name[:30]}...'")
+                                        break
                         
                         if not product:
-                            logger.warning(f"No match found for '{cell_value[:50]}'")
+                            logger.debug(f"No match: '{cell_value[:40]}'")
                             row_idx += 2
                             continue
                         
