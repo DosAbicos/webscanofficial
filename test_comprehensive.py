@@ -132,8 +132,8 @@ def test_export_only_with_barcodes():
         })
     
     print(f"\n✅ Created {len(all_products)} total products:")
-    print(f"   - 5 WITH barcodes")
-    print(f"   - 10 WITHOUT barcodes")
+    print(f"   - {len(products_with_barcode)} WITH barcodes")
+    print(f"   - {len(products_without_barcode)} WITHOUT barcodes")
     
     # Filter for export (only with barcodes)
     products_to_export = [p for p in all_products if p["barcode"] and p["barcode"] != ""]
