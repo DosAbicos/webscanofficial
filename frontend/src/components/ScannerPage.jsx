@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { ArrowLeft, Camera, CameraOff, Save, Search } from 'lucide-react';
+import { ArrowLeft, Camera, CameraOff, Save, Search, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
-import { searchProducts, updateProductBarcode } from '../lib/db';
+import { searchProducts, updateProductBarcode, db, initializeDatabase } from '../lib/db';
+import { loadExcelFile } from '../lib/excelLoader';
 
 export const ScannerPage = () => {
   const navigate = useNavigate();
@@ -17,14 +18,33 @@ export const ScannerPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [actualQuantity, setActualQuantity] = useState('');
+  const [dbLoading, setDbLoading] = useState(true);
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
 
   useEffect(() => {
+    initDB();
     return () => {
       stopScanner();
     };
   }, []);
+
+  const initDB = async () => {
+    try {
+      const count = await db.products.count();
+      
+      if (count === 0) {
+        const productsData = await loadExcelFile();
+        await initializeDatabase(productsData);
+      }
+      
+      setDbLoading(false);
+    } catch (error) {
+      console.error('Error initializing database:', error);
+      toast.error('Ошибка загрузки данных');
+      setDbLoading(false);
+    }
+  };
 
   const startScanner = async () => {
     try {
