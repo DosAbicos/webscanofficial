@@ -25,6 +25,19 @@ export const ScannerPage = () => {
 
   useEffect(() => {
     initDB();
+    
+    // Check if we're coming from edit mode
+    const editingProduct = sessionStorage.getItem('editingProduct');
+    if (editingProduct) {
+      try {
+        const product = JSON.parse(editingProduct);
+        setSelectedProduct(product);
+        toast.info(`Пересканирование штрихкода для: ${product.name}`);
+      } catch (error) {
+        console.error('Error parsing editing product:', error);
+      }
+    }
+    
     return () => {
       stopScanner();
     };
