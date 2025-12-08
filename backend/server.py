@@ -166,12 +166,14 @@ async def export_excel(products: List[Product]):
         row_idx = 9  # Start from row 10
         original_sheet = rb.sheet_by_index(0)
         
+        logger.info(f"=" * 80)
         logger.info(f"Starting Excel export with {len(products)} products")
         logger.info(f"Product map has {len(product_map)} entries")
         
-        # Log first few product names for debugging
-        for i, p in enumerate(products[:3]):
-            logger.info(f"Product {i+1}: '{p.name}' | Barcode: {p.barcode} | Qty: {p.actual_quantity}")
+        # Log ALL product names for debugging
+        logger.info(f"Products to export:")
+        for i, p in enumerate(products):
+            logger.info(f"  [{i+1}] '{p.name[:60]}' | Barcode: {p.barcode} | Qty: {p.actual_quantity}")
         
         # STEP 1: Clear all existing data in columns 8 and 9
         # This ensures deleted products are removed from export
