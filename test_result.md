@@ -137,15 +137,18 @@ frontend:
 
   - task: "Product Edit and Save Functionality"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/ProductList.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test edit mode, barcode input, quantity input, save functionality"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE: Unable to test 'Со штрихкодом' tab functionality. Attempted to add barcode via browser console as specified in review request, but barcode addition not working. Stats still show 0 products with barcode after attempted addition. Cannot verify if products WITH barcode correctly display barcode, have 'По факту' input field, 'Редактировать' button, and delete button. This prevents testing the full edit/save functionality for products with barcodes."
 
   - task: "Scanner Page and Navigation"
     implemented: true
