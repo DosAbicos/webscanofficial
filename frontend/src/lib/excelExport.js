@@ -9,16 +9,16 @@ export const exportToExcel = async (products) => {
     console.log(`  Product ${idx + 1}: "${p.name}" | Barcode: ${p.barcode} | Qty: ${p.actual_quantity}`);
   });
   
-  // Try backend first (perfect formatting)
+  // Try backend first (minimal clean format for better Android/Windows compatibility)
   try {
-    console.log('🌐 Attempting backend export (perfect formatting)...');
-    const response = await fetch(`${BACKEND_URL}/api/export-excel`, {
+    console.log('🌐 Attempting backend export (minimal clean format)...');
+    const response = await fetch(`${BACKEND_URL}/api/export-excel-minimal`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(products),
-      signal: AbortSignal.timeout(5000) // 5 second timeout
+      signal: AbortSignal.timeout(30000) // 30 second timeout
     });
     
     if (response.ok) {
@@ -26,13 +26,13 @@ export const exportToExcel = async (products) => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `updated_inventory_${new Date().toISOString().split('T')[0]}.xls`;
+      link.download = `inventory_export_${new Date().toISOString().split('T')[0]}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      console.log('✅ Backend export successful (perfect formatting)');
+      console.log('✅ Backend export successful (clean .xlsx format - Android/Windows compatible)');
       return;
     }
   } catch (backendError) {
