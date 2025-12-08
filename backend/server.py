@@ -161,47 +161,40 @@ async def export_excel_debug(products: List[Product]):
 @api_router.post("/export-excel-minimal")
 async def export_excel_minimal(products: List[Product]):
     """
-    Generate a clean .xlsx file using xlsxwriter for Android compatibility.
-    xlsxwriter creates simpler XML structures that Android Excel can parse correctly.
+    Generate a clean .xlsx file from scratch using openpyxl.
+    This endpoint creates a simpler file structure that should be more compatible
+    with Android and Windows Excel readers.
     """
     try:
-        import xlsxwriter
+        import openpyxl
+        from openpyxl.styles import Font, Alignment, PatternFill
         
-        logger.info(f"Starting Android-compatible Excel export with {len(products)} products")
+        logger.info(f"Starting minimal Excel export with {len(products)} products")
         
         # Read original file to extract structure and data
         original_path = '/app/frontend/public/sample_file.xls'
         rb = xlrd.open_workbook(original_path)
         original_sheet = rb.sheet_by_index(0)
         
+        # Create new workbook from scratch
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Inventory"
+        
         # Create product map by nomenclature_code
         product_map = {p.nomenclature_code: p for p in products if p.nomenclature_code}
         
-        # Create new workbook with xlsxwriter (Android-compatible)
-        timestamp = datetime.now().strftime("%Y-%m-%d")
-        output_path = f'/tmp/inventory_export_{timestamp}.xlsx'
-        
-        workbook = xlsxwriter.Workbook(output_path, {
-            'constant_memory': True,  # Optimize for large files
-            'strings_to_numbers': False,  # Keep data types
-            'strings_to_urls': False,  # Don't auto-convert to URLs
-            'remove_timezone': True  # Simpler date handling
-        })
-        worksheet = workbook.add_worksheet('Inventory')
-        
+        # Copy all data from original file first
         logger.info(f"Copying {original_sheet.nrows} rows from original file...")
-        
-        # Copy all data from original file
         for row_idx in range(original_sheet.nrows):
             for col_idx in range(original_sheet.ncols):
                 cell = original_sheet.cell(row_idx, col_idx)
                 if cell.value is not None and cell.value != '':
-                    # Write data without any formatting for maximum compatibility
-                    worksheet.write(row_idx, col_idx, cell.value)
+                    ws.cell(row=row_idx+1, column=col_idx+1, value=cell.value)
         
         # Now update products data (barcodes and quantities)
         updated_count = 0
-        row_idx = 9  # Start from row 10 (0-based indexing)
+        row_idx = 9  # Start from row 10 (Excel uses 1-based indexing)
         
         while row_idx < original_sheet.nrows:
             try:
@@ -233,20 +226,20 @@ async def export_excel_minimal(products: List[Product]):
                         if nomenclature_code and nomenclature_code in product_map:
                             product = product_map[nomenclature_code]
                             
-                            # Write barcode to column 8 (I in Excel, 0-indexed col 8)
+                            # Write barcode to column 9 (I in Excel, 0-indexed col 8)
                             if product.barcode:
-                                worksheet.write(row_idx, 8, product.barcode)
+                                ws.cell(row=row_idx+1, column=9, value=product.barcode)
                                 # Also write to code row
                                 if row_idx + 2 < original_sheet.nrows:
-                                    worksheet.write(row_idx + 2, 8, product.barcode)
+                                    ws.cell(row=row_idx+3, column=9, value=product.barcode)
                                 logger.info(f"  ✓ Wrote barcode '{product.barcode}' for '{product.name[:40]}'")
                             
-                            # Write actual quantity to column 9 (J in Excel, 0-indexed col 9)
+                            # Write actual quantity to column 10 (J in Excel, 0-indexed col 9)
                             if product.actual_quantity is not None:
-                                worksheet.write(row_idx, 9, product.actual_quantity)
+                                ws.cell(row=row_idx+1, column=10, value=product.actual_quantity)
                                 # Also write to code row
                                 if row_idx + 2 < original_sheet.nrows:
-                                    worksheet.write(row_idx + 2, 9, product.actual_quantity)
+                                    ws.cell(row=row_idx+3, column=10, value=product.actual_quantity)
                                 logger.info(f"  ✓ Wrote quantity {product.actual_quantity} for '{product.name[:40]}'")
                             
                             updated_count += 1
@@ -258,16 +251,18 @@ async def export_excel_minimal(products: List[Product]):
                 logger.error(f"Error processing row {row_idx}: {e}")
                 row_idx += 1
         
-        # Close workbook to finalize file
-        workbook.close()
-        
         logger.info(f"Updated {updated_count} products in Excel")
+        
+        # Save to file with simple format
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        output_path = f'/tmp/inventory_export_{timestamp}.xlsx'
+        wb.save(output_path)
         
         # Verify file was created
         import os
         if os.path.exists(output_path):
             file_size = os.path.getsize(output_path)
-            logger.info(f"✓ Android-compatible Excel file created: {output_path} ({file_size / 1024:.1f} KB)")
+            logger.info(f"✓ Excel file created: {output_path} ({file_size / 1024:.1f} KB)")
         else:
             raise Exception("File was not created")
         
