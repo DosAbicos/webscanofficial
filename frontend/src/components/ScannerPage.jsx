@@ -178,23 +178,6 @@ export const ScannerPage = () => {
       </div>
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
-        {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${step === 1 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
-            <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold">1</div>
-            <span className="text-sm font-medium">Сканирование</span>
-          </div>
-          <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${step === 2 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
-            <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</div>
-            <span className="text-sm font-medium">Поиск</span>
-          </div>
-          <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-primary' : 'bg-muted'}`} />
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${step === 3 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
-            <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold">3</div>
-            <span className="text-sm font-medium">Количество</span>
-          </div>
-        </div>
 
         {/* Step 1: Scanner Section */}
         {step === 1 && (
