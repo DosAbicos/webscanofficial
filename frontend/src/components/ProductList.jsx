@@ -116,12 +116,30 @@ export const ProductList = ({ products, hasBarcode, onUpdate }) => {
                   {/* Barcode Display/Edit */}
                   {editingId === product.id ? (
                     <div className="space-y-2">
-                      <Input
-                        placeholder="Штрихкод"
-                        value={editBarcode}
-                        onChange={(e) => setEditBarcode(e.target.value)}
-                        className="h-10"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Штрихкод"
+                          value={editBarcode}
+                          onChange={(e) => setEditBarcode(e.target.value)}
+                          className="h-10 flex-1"
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            // Save current editing state and navigate to scanner
+                            sessionStorage.setItem('editingProduct', JSON.stringify({
+                              id: product.id,
+                              name: product.name,
+                              quantity: editQuantity
+                            }));
+                            navigate('/scanner');
+                          }}
+                          title="Пересканировать штрихкод"
+                        >
+                          <Scan className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <Input
                         type="number"
                         step="0.01"
