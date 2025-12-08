@@ -226,12 +226,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Home Page Display and Navigation"
-    - "Product List and Search Functionality"
     - "Product Edit and Save Functionality"
   stuck_tasks: 
-    - "Product Search in Scanner"
-    - "IndexedDB Data Persistence"
+    - "Product Edit and Save Functionality"
   test_all: false
   test_priority: "stuck_first"
 
