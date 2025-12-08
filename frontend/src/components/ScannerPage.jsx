@@ -12,6 +12,7 @@ import { loadExcelFile } from '../lib/excelLoader';
 
 export const ScannerPage = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1); // 1: scanning, 2: search product, 3: enter quantity
   const [isScanning, setIsScanning] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
