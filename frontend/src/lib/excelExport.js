@@ -2,6 +2,15 @@ export const exportToExcel = async (products) => {
   try {
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
     
+    console.log(`📦 Exporting ${products.length} products to backend`);
+    
+    // Log first few products with barcodes for debugging
+    const productsWithBarcode = products.filter(p => p.barcode && p.barcode !== '');
+    console.log(`📊 Products with barcodes: ${productsWithBarcode.length}`);
+    productsWithBarcode.slice(0, 3).forEach((p, idx) => {
+      console.log(`  Product ${idx + 1}: "${p.name}" | Barcode: ${p.barcode} | Qty: ${p.actual_quantity}`);
+    });
+    
     // Send products to backend for proper Excel export with formatting preservation
     const response = await fetch(`${BACKEND_URL}/api/export-excel`, {
       method: 'POST',
