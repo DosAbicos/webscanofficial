@@ -125,8 +125,23 @@ async def export_excel(products: List[Product]):
                     clean_name = cell_value.replace(' ', '')
                     is_code = clean_name.isdigit()
                     
-                    if not is_code and cell_value and cell_value != 'Итого' and cell_value in product_map:
-                        product = product_map[cell_value]
+                    if not is_code and cell_value and cell_value != 'Итого':
+                        if cell_value in product_map:
+                            product = product_map[cell_value]
+                        else:
+                            # Try to find partial match (in case of truncation)
+                            logger.warning(f"Exact match not found for '{cell_value[:50]}...'")
+                            product = None
+                            for prod_name in product_map.keys():
+                                if cell_value.startswith(prod_name[:50]) or prod_name.startswith(cell_value[:50]):
+                                    logger.info(f"Found partial match: '{prod_name[:50]}'")
+                                    product = product_map[prod_name]
+                                    break
+                        
+                        if not product:
+                            logger.warning(f"No match found for '{cell_value[:50]}'")
+                            row_idx += 2
+                            continue
                         
                         # Write barcode to column 8 (same row as product name)
                         if product.barcode:
