@@ -178,122 +178,187 @@ export const ScannerPage = () => {
       </div>
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
-        {/* Scanner Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Камера</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div
-              id="scanner-container"
-              ref={scannerRef}
-              className="w-full aspect-square bg-black rounded-lg overflow-hidden"
-            />
-            
-            <Button
-              onClick={isScanning ? stopScanner : startScanner}
-              className="w-full scan-button h-12"
-            >
-              {isScanning ? (
-                <>
-                  <CameraOff className="h-5 w-5 mr-2" />
-                  Остановить сканирование
-                </>
-              ) : (
-                <>
-                  <Camera className="h-5 w-5 mr-2" />
-                  Начать сканирование
-                </>
+        {/* Step Indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${step === 1 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+            <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold">1</div>
+            <span className="text-sm font-medium">Сканирование</span>
+          </div>
+          <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${step === 2 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+            <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold">2</div>
+            <span className="text-sm font-medium">Поиск</span>
+          </div>
+          <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-primary' : 'bg-muted'}`} />
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${step === 3 ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+            <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold">3</div>
+            <span className="text-sm font-medium">Количество</span>
+          </div>
+        </div>
+
+        {/* Step 1: Scanner Section */}
+        {step === 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Шаг 1: Сканирование штрихкода</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div
+                id="scanner-container"
+                ref={scannerRef}
+                className="w-full aspect-square bg-black rounded-lg overflow-hidden"
+              />
+              
+              <Button
+                onClick={isScanning ? stopScanner : startScanner}
+                className="w-full scan-button h-12"
+              >
+                {isScanning ? (
+                  <>
+                    <CameraOff className="h-5 w-5 mr-2" />
+                    Остановить сканирование
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5 mr-2" />
+                    Начать сканирование
+                  </>
+                )}
+              </Button>
+
+              {scannedBarcode && (
+                <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
+                  <p className="text-sm font-medium text-success">Отсканировано:</p>
+                  <p className="text-lg font-mono mt-1">{scannedBarcode}</p>
+                </div>
               )}
-            </Button>
+            </CardContent>
+          </Card>
+        )}
 
-            {scannedBarcode && (
-              <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
-                <p className="text-sm font-medium text-success">Отсканировано:</p>
-                <p className="text-lg font-mono mt-1">{scannedBarcode}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Step 2: Product Search */}
+        {step === 2 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Шаг 2: Найдите товар</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {scannedBarcode && (
+                <div className="p-3 bg-success/10 border border-success/20 rounded-lg mb-4">
+                  <p className="text-sm font-medium text-success">Штрихкод:</p>
+                  <p className="text-lg font-mono mt-1">{scannedBarcode}</p>
+                </div>
+              )}
 
-        {/* Product Search */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Поиск товара</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
               <Input
-                placeholder="Название или номер накладной..."
+                placeholder="Введите название или номер накладной..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="flex-1"
+                className="w-full"
+                autoFocus
               />
-              <Button onClick={handleSearch} variant="outline">
-                <Search className="h-5 w-5" />
+
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {searchResults.map((product) => (
+                    <Card
+                      key={product.id}
+                      className="cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => handleProductSelect(product)}
+                    >
+                      <CardContent className="p-3">
+                        <p className="font-medium text-sm line-clamp-1">{product.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {product.nomenclature_code && (
+                            <span className="text-xs text-muted-foreground">№ {product.nomenclature_code}</span>
+                          )}
+                          <Badge variant="secondary" className="text-xs">
+                            {product.stock_quantity} шт
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {searchQuery && searchResults.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Товары не найдены</p>
+                </div>
+              )}
+
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                className="w-full"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Вернуться к сканированию
               </Button>
-            </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {searchResults.length > 0 && (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {searchResults.map((product) => (
-                  <Card
-                    key={product.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors"
-                    onClick={() => handleProductSelect(product)}
-                  >
-                    <CardContent className="p-3">
-                      <p className="font-medium text-sm line-clamp-1">{product.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {product.nomenclature_code && (
-                          <span className="text-xs text-muted-foreground">№ {product.nomenclature_code}</span>
-                        )}
-                        <Badge variant="secondary" className="text-xs">
-                          {product.stock_quantity} шт
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {selectedProduct && (
-              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Выбранный товар:</p>
-                  <p className="font-semibold mt-1">{selectedProduct.name}</p>
-                  {selectedProduct.nomenclature_code && (
-                    <p className="text-sm text-muted-foreground">№ {selectedProduct.nomenclature_code}</p>
-                  )}
+        {/* Step 3: Quantity Input */}
+        {step === 3 && selectedProduct && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Шаг 3: Количество по факту</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {scannedBarcode && (
+                <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
+                  <p className="text-sm font-medium text-success">Штрихкод:</p>
+                  <p className="text-lg font-mono mt-1">{scannedBarcode}</p>
                 </div>
+              )}
 
-                <div>
-                  <label className="text-sm font-medium">Количество по факту (опционально)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0"
-                    value={actualQuantity}
-                    onChange={(e) => setActualQuantity(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground">Выбранный товар:</p>
+                <p className="font-semibold mt-1">{selectedProduct.name}</p>
+                {selectedProduct.nomenclature_code && (
+                  <p className="text-sm text-muted-foreground mt-1">№ {selectedProduct.nomenclature_code}</p>
+                )}
+                <Badge variant="secondary" className="mt-2">
+                  На складе: {selectedProduct.stock_quantity} шт
+                </Badge>
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Save Button */}
-        {scannedBarcode && selectedProduct && (
-          <Button
-            onClick={handleSave}
-            className="w-full h-12 scan-button"
-          >
-            <Save className="h-5 w-5 mr-2" />
-            Сохранить данные
-          </Button>
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Количество по факту <span className="text-muted-foreground">(опционально)</span>
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Введите количество"
+                  value={actualQuantity}
+                  onChange={(e) => setActualQuantity(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setStep(2)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Назад
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className="flex-1 scan-button"
+                >
+                  <Save className="h-5 w-5 mr-2" />
+                  Сохранить
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
