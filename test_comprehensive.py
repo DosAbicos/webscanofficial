@@ -89,27 +89,44 @@ def test_export_only_with_barcodes():
     print("TEST 2: EXPORT ONLY PRODUCTS WITH BARCODES")
     print("=" * 80)
     
+    # Use REAL product names from Excel file
     # Create test data: mix of products with and without barcodes
     all_products = []
     
-    # 5 products WITH barcodes (should be exported)
-    for i in range(5):
+    # 5 REAL products WITH barcodes (should be exported)
+    products_with_barcode = [
+        ("IDEAL ПАРКЕТНЫЙ ЛАК ГЛЯНЦЕВЫЙ (10L)", "20002755", 15.0),
+        ("IDEAL ПАРКЕТНЫЙ ЛАК ГЛЯНЦЕВЫЙ (2,5L)", "20002659", 25.0),
+        ("КРАСКА ПОЛИЭФИРНАЯ BORITEX CLASSIC CHERRY 6 (0,75L)", "20002634", 30.0),
+        ("КРАСКА ПОЛИЭФИРНАЯ BORITEX CLASSIC WALNUT 4 (0,75L)", "20002620", 60.0),
+        ("КРАСКА ПОЛИЭФИРНАЯ BORITEX ULTRA CHERRY 6 (0,75L)", "20002652", 30.0),
+    ]
+    
+    for i, (name, code, stock) in enumerate(products_with_barcode):
         all_products.append({
             "id": i + 1,
-            "name": f"ТОВАР С ШТРИХКОДОМ #{i+1}",
-            "nomenclature_code": f"2000{2750 + i}",
-            "stock_quantity": 10.0 + i,
+            "name": name,
+            "nomenclature_code": code,
+            "stock_quantity": stock,
             "barcode": f"111111111{i:04d}",
-            "actual_quantity": 8.0 + i
+            "actual_quantity": stock - 2.0
         })
     
-    # 10 products WITHOUT barcodes (should NOT be exported)
-    for i in range(10):
+    # 5 REAL products WITHOUT barcodes (should NOT be exported)
+    products_without_barcode = [
+        ("КРАСКА ПОЛИЭФИРНАЯ BORITEX ULTRA WALNUT 4 (0,75L)", "20002668", 30.0),
+        ("ЛЕНТА ИЗОЛЯЦИОННАЯ TEMFLEX 1300 19MM X 20MM (БЕЛАЯ)", "20000090", 44.0),
+        ("ЛЕНТА ИЗОЛЯЦИОННАЯ TEMFLEX 1300 19MM X 20MM (ЖЕЛТАЯ)", "20000091", 125.0),
+        ("ЛЕНТА ИЗОЛЯЦИОННАЯ TEMFLEX 1300 19MM X 20MM (ЗЕЛЁНАЯ)", "20000092", 100.0),
+        ("ЛЕНТА ИЗОЛЯЦИОННАЯ TEMFLEX 1300 19MM X 20MM (КРАСНАЯ)", "20000093", 175.0),
+    ]
+    
+    for i, (name, code, stock) in enumerate(products_without_barcode):
         all_products.append({
-            "id": i + 6,
-            "name": f"ТОВАР БЕЗ ШТРИХКОДА #{i+1}",
-            "nomenclature_code": f"2000{2760 + i}",
-            "stock_quantity": 15.0 + i,
+            "id": len(all_products) + 1,
+            "name": name,
+            "nomenclature_code": code,
+            "stock_quantity": stock,
             "barcode": "",
             "actual_quantity": None
         })
