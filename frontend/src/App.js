@@ -133,15 +133,9 @@ const Home = () => {
           <TabsList className="grid w-full grid-cols-2 h-12">
             <TabsTrigger value="without" className="text-base">
               Без штрихкода
-              <Badge variant="secondary" className="ml-2">
-                {withoutBarcode.length}
-              </Badge>
             </TabsTrigger>
             <TabsTrigger value="with" className="text-base">
               Со штрихкодом
-              <Badge variant="secondary" className="ml-2">
-                {withBarcode.length}
-              </Badge>
             </TabsTrigger>
           </TabsList>
 
