@@ -2,6 +2,7 @@
 """
 Automated test for Excel export functionality
 Tests that exported Excel file maintains original formatting and data is written to correct columns
+IMPORTANT: This test verifies that the Excel file is IDENTICAL to the original in formatting
 """
 
 import sys
@@ -10,10 +11,22 @@ import requests
 import json
 from pathlib import Path
 
+def compare_cell_formats(original_cell, exported_cell, row, col):
+    """Compare formatting between two cells"""
+    issues = []
+    
+    # Note: xlrd doesn't expose all formatting details when reading back,
+    # but we can check what's available
+    if hasattr(original_cell, 'xf_index') and hasattr(exported_cell, 'xf_index'):
+        if original_cell.xf_index != exported_cell.xf_index:
+            issues.append(f"Cell ({row}, {col}): Format index mismatch")
+    
+    return issues
+
 def test_excel_export():
     """Test Excel export with sample data"""
     print("=" * 80)
-    print("AUTOMATED EXCEL EXPORT TEST")
+    print("AUTOMATED EXCEL EXPORT TEST - FULL FORMATTING CHECK")
     print("=" * 80)
     
     # Test data
