@@ -193,19 +193,66 @@ def test_load_2000_products():
     print("TEST 3: LOAD TEST WITH 2000 PRODUCTS")
     print("=" * 80)
     
-    # Generate 2000 products with barcodes
-    print("\n⏳ Generating 2000 products...")
+    # First, get real product names from Excel
+    print("\n⏳ Loading product names from Excel...")
+    import xlrd
+    
+    wb = xlrd.open_workbook('/app/sample_file.xls')
+    sheet = wb.sheet_by_index(0)
+    
+    real_products = []
+    row_idx = 9
+    
+    while row_idx < sheet.nrows and len(real_products) < 2100:
+        cell_a = sheet.cell(row_idx, 0)
+        cell_b = sheet.cell(row_idx + 1, 1) if row_idx + 1 < sheet.nrows else None
+        
+        if not cell_a.value:
+            row_idx += 1
+            continue
+        
+        cell_value = str(cell_a.value).strip()
+        next_cell_value = str(cell_b.value).strip() if cell_b else ''
+        
+        if next_cell_value == 'Кол.':
+            clean_name = cell_value.replace(' ', '')
+            is_code = clean_name.isdigit()
+            
+            if not is_code and cell_value and cell_value != 'Итого':
+                # Get quantity
+                qty_cell = sheet.cell(row_idx + 1, 2) if row_idx + 1 < sheet.nrows else None
+                quantity = float(qty_cell.value) if qty_cell and qty_cell.value else 0.0
+                
+                # Get nomenclature code
+                code_cell = sheet.cell(row_idx + 2, 0) if row_idx + 2 < sheet.nrows else None
+                code = str(code_cell.value).strip() if code_cell and code_cell.value else ""
+                
+                real_products.append({
+                    'name': cell_value,
+                    'code': code,
+                    'quantity': quantity
+                })
+            
+            row_idx += 2
+        else:
+            row_idx += 1
+    
+    print(f"✅ Loaded {len(real_products)} real product names from Excel")
+    
+    # Generate 2000 products with barcodes using REAL names
+    print("\n⏳ Generating 2000 products with barcodes...")
     start_gen = time.time()
     
     products = []
-    for i in range(2000):
+    for i in range(min(2000, len(real_products))):
+        prod = real_products[i]
         products.append({
             "id": i + 1,
-            "name": f"ТЕСТОВЫЙ ТОВАР #{i+1:04d}",
-            "nomenclature_code": f"{20000000 + i}",
-            "stock_quantity": 10.0 + (i % 100),
+            "name": prod['name'],
+            "nomenclature_code": prod['code'],
+            "stock_quantity": prod['quantity'],
             "barcode": f"TEST{i:016d}",
-            "actual_quantity": 8.0 + (i % 50)
+            "actual_quantity": max(0, prod['quantity'] - (i % 10))
         })
     
     gen_time = time.time() - start_gen
