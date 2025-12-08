@@ -1,13 +1,47 @@
 export const exportToExcel = async (products) => {
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+  
+  // Log products with barcodes
+  const productsWithBarcode = products.filter(p => p.barcode && p.barcode !== '');
+  console.log(`📦 Exporting ${products.length} products`);
+  console.log(`📊 Products with barcodes: ${productsWithBarcode.length}`);
+  productsWithBarcode.slice(0, 3).forEach((p, idx) => {
+    console.log(`  Product ${idx + 1}: "${p.name}" | Barcode: ${p.barcode} | Qty: ${p.actual_quantity}`);
+  });
+  
+  // Try backend first (perfect formatting)
   try {
-    console.log(`📦 Exporting ${products.length} products (OFFLINE MODE)`);
-    
-    // Log products with barcodes
-    const productsWithBarcode = products.filter(p => p.barcode && p.barcode !== '');
-    console.log(`📊 Products with barcodes: ${productsWithBarcode.length}`);
-    productsWithBarcode.slice(0, 3).forEach((p, idx) => {
-      console.log(`  Product ${idx + 1}: "${p.name}" | Barcode: ${p.barcode} | Qty: ${p.actual_quantity}`);
+    console.log('🌐 Attempting backend export (perfect formatting)...');
+    const response = await fetch(`${BACKEND_URL}/api/export-excel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(products),
+      signal: AbortSignal.timeout(5000) // 5 second timeout
     });
+    
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `updated_inventory_${new Date().toISOString().split('T')[0]}.xls`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log('✅ Backend export successful (perfect formatting)');
+      return;
+    }
+  } catch (backendError) {
+    console.log('⚠️ Backend unavailable, using offline mode:', backendError.message);
+  }
+  
+  // Fallback to client-side export
+  try {
+    console.log('💾 Using offline export (may show Excel warning)...');
     
     // Load XLSX library
     const XLSX = await import('xlsx');
