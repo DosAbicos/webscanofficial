@@ -90,8 +90,9 @@ async def export_excel_debug(products: List[Product]):
         rb = xlrd.open_workbook(original_path)
         original_sheet = rb.sheet_by_index(0)
         
-        # Create product map
-        product_map = {p.name: p for p in products}
+        # Create product map by nomenclature_code (unique identifier)
+        # This prevents issues with duplicate names
+        product_map = {p.nomenclature_code: p for p in products if p.nomenclature_code}
         
         logger.info(f"Debug: Received {len(products)} products")
         
@@ -159,8 +160,9 @@ async def export_excel(products: List[Product]):
         wb = xl_copy(rb)
         sheet = wb.get_sheet(0)
         
-        # Create product map
-        product_map = {p.name: p for p in products}
+        # Create product map by nomenclature_code (unique identifier)
+        # This prevents issues with duplicate names
+        product_map = {p.nomenclature_code: p for p in products if p.nomenclature_code}
         
         # Update products in Excel
         row_idx = 9  # Start from row 10
