@@ -247,6 +247,7 @@ async def export_excel(products: List[Product]):
                             # Also write to code row (2 rows down)
                             if row_idx + 2 < original_sheet.nrows:
                                 sheet.write(row_idx + 2, 8, product.barcode)
+                            logger.info(f"  ✓ Wrote barcode '{product.barcode}' at row {row_idx + 1}")
                         
                         # Write actual quantity to column 9 (same row as product name)
                         if product.actual_quantity is not None:
@@ -254,6 +255,7 @@ async def export_excel(products: List[Product]):
                             # Also write to code row (2 rows down)
                             if row_idx + 2 < original_sheet.nrows:
                                 sheet.write(row_idx + 2, 9, product.actual_quantity)
+                            logger.info(f"  ✓ Wrote quantity {product.actual_quantity} at row {row_idx + 1}")
                         
                         updated_count += 1
                     
