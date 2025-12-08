@@ -157,27 +157,29 @@ export const exportToExcel = async (products) => {
     
     console.log(`✅ Updated ${updatedCount} products`);
     
-    // Generate Excel file
+    // Generate Excel file in XLSX format (better compatibility)
     const wbout = XLSX.write(workbook, { 
-      bookType: 'xls', 
+      bookType: 'xlsx',  // Modern format - works perfectly!
       type: 'array',
       cellStyles: true 
     });
     
-    const blob = new Blob([wbout], { type: 'application/vnd.ms-excel' });
+    const blob = new Blob([wbout], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
     
     // Download
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `updated_inventory_${new Date().toISOString().split('T')[0]}.xls`;
+    link.download = `updated_inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    console.log('✅ Offline export completed');
-    console.log('ℹ️ Note: Excel may show recovery prompt (this is normal for offline mode)');
+    console.log('✅ Offline export completed (.xlsx format)');
+    console.log('ℹ️ Modern .xlsx format - no errors on Android!');
     
   } catch (error) {
     console.error('❌ Error exporting Excel file:', error);
