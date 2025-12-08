@@ -276,18 +276,52 @@ async def export_excel(products: List[Product]):
         
         logger.info(f"Updated {updated_count} products in Excel")
         
-        # Save to temporary file
+        # Save to temporary file (keep as .xls for now, but can convert to .xlsx if needed)
         timestamp = datetime.now().strftime("%Y-%m-%d")
         output_path = f'/tmp/updated_inventory_{timestamp}.xls'
         wb.save(output_path)
         
         logger.info(f"Excel file saved to {output_path}")
         
-        return FileResponse(
-            output_path,
-            media_type='application/vnd.ms-excel',
-            filename=f'updated_inventory_{timestamp}.xls'
-        )
+        # Convert to .xlsx for better compatibility with Android
+        try:
+            import openpyxl
+            from openpyxl import load_workbook
+            
+            # Read .xls and convert to .xlsx
+            import xlrd
+            old_wb = xlrd.open_workbook(output_path)
+            old_sheet = old_wb.sheet_by_index(0)
+            
+            # Create new .xlsx workbook
+            new_wb = openpyxl.Workbook()
+            new_ws = new_wb.active
+            
+            # Copy all data
+            for row_idx in range(old_sheet.nrows):
+                for col_idx in range(old_sheet.ncols):
+                    cell = old_sheet.cell(row_idx, col_idx)
+                    new_ws.cell(row=row_idx+1, column=col_idx+1, value=cell.value)
+            
+            # Save as .xlsx
+            xlsx_path = f'/tmp/updated_inventory_{timestamp}.xlsx'
+            new_wb.save(xlsx_path)
+            
+            logger.info(f"Converted to .xlsx: {xlsx_path}")
+            
+            return FileResponse(
+                xlsx_path,
+                media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                filename=f'updated_inventory_{timestamp}.xlsx'
+            )
+        except Exception as convert_error:
+            logger.warning(f"Could not convert to .xlsx: {convert_error}, returning .xls")
+            # Fallback to .xls if conversion fails
+            return FileResponse(
+                output_path,
+                media_type='application/vnd.ms-excel',
+                filename=f'updated_inventory_{timestamp}.xls'
+            )
     
     except Exception as e:
         logger.error(f"Error in export_excel: {e}")
