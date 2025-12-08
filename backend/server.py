@@ -295,17 +295,29 @@ async def export_excel(products: List[Product]):
             new_wb = openpyxl.Workbook()
             new_ws = new_wb.active
             
-            # Copy all data
+            # Copy all data - optimize by skipping empty cells
+            logger.info(f"Converting {old_sheet.nrows} rows to .xlsx...")
+            
             for row_idx in range(old_sheet.nrows):
+                has_data = False
                 for col_idx in range(old_sheet.ncols):
                     cell = old_sheet.cell(row_idx, col_idx)
-                    new_ws.cell(row=row_idx+1, column=col_idx+1, value=cell.value)
+                    if cell.value is not None and cell.value != '':
+                        new_ws.cell(row=row_idx+1, column=col_idx+1, value=cell.value)
+                        has_data = True
+                
+                # Progress log every 1000 rows
+                if row_idx % 1000 == 0 and row_idx > 0:
+                    logger.info(f"  Processed {row_idx} rows...")
             
             # Save as .xlsx
             xlsx_path = f'/tmp/updated_inventory_{timestamp}.xlsx'
             new_wb.save(xlsx_path)
             
-            logger.info(f"Converted to .xlsx: {xlsx_path}")
+            # Get file size
+            import os
+            file_size = os.path.getsize(xlsx_path)
+            logger.info(f"Converted to .xlsx: {xlsx_path} ({file_size / 1024:.1f} KB)")
             
             return FileResponse(
                 xlsx_path,
