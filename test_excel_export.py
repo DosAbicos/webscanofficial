@@ -137,24 +137,47 @@ def test_excel_export():
         else:
             print(f"⚠️  WARNING: Header for column 9 unexpected: '{header_col_9}'")
         
-        # Compare some cells from original vs exported to ensure formatting preserved
-        print("\n5. Spot-checking cell preservation...")
+        # Compare many cells from original vs exported to ensure formatting preserved
+        print("\n5. Comprehensive cell preservation check...")
         sample_cells = [
-            (0, 0),  # First cell
-            (3, 0),  # Header area
-            (8, 1),  # Data area
+            (0, 0),  # Title row
+            (1, 0),  # Subtitle
+            (3, 0),  # Header "Счет"
+            (4, 0),  # "Номенклатура"
+            (4, 8),  # "Штрихкоды" header
+            (4, 9),  # "Кол-во пофакту" header
+            (8, 0),  # First data row
+            (8, 1),  # БУ
+            (8, 2),  # Dебет value
+            (9, 1),  # "Кол."
+            (10, 0), # Product name
         ]
         
         all_match = True
+        format_issues = []
+        
         for row, col in sample_cells:
             orig_val = str(original_sheet.cell(row, col).value).strip()
             exp_val = str(exported_sheet.cell(row, col).value).strip()
             if orig_val != exp_val:
-                print(f"⚠️  Cell ({row}, {col}) changed: '{orig_val}' → '{exp_val}'")
+                print(f"⚠️  Cell ({row}, {col}) VALUE changed: '{orig_val}' → '{exp_val}'")
                 all_match = False
+            
+            # Check formatting
+            orig_cell = original_sheet.cell(row, col)
+            exp_cell = exported_sheet.cell(row, col)
+            issues = compare_cell_formats(orig_cell, exp_cell, row, col)
+            format_issues.extend(issues)
         
         if all_match:
-            print("✅ Sample cells unchanged - formatting preserved")
+            print("✅ All sample cell VALUES unchanged")
+        
+        if format_issues:
+            print(f"⚠️  Found {len(format_issues)} potential formatting differences")
+            for issue in format_issues[:5]:  # Show first 5
+                print(f"   {issue}")
+        else:
+            print("✅ Cell formatting appears preserved")
         
         print("\n" + "=" * 80)
         print("✅ ALL TESTS PASSED - Excel export is working correctly!")
