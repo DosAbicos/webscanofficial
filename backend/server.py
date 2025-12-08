@@ -86,7 +86,7 @@ async def export_excel_debug(products: List[Product]):
     try:
         import xlrd
         
-        original_path = '/app/sample_file.xls'
+        original_path = '/app/frontend/public/sample_file.xls'
         rb = xlrd.open_workbook(original_path)
         original_sheet = rb.sheet_by_index(0)
         
@@ -166,7 +166,7 @@ async def export_excel(products: List[Product]):
     """
     try:
         # Load original file with formatting
-        original_path = '/app/sample_file.xls'
+        original_path = '/app/frontend/public/sample_file.xls'
         rb = xlrd.open_workbook(original_path, formatting_info=True)
         wb = xl_copy(rb)
         sheet = wb.get_sheet(0)
