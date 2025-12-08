@@ -15,7 +15,7 @@ export const exportToExcel = async (products) => {
       productMap.set(p.name, p);
     });
     
-    let rowIdx = 9;
+    let rowIdx = 9; // Start from row 10
     
     while (rowIdx < range.e.r) {
       const cellA = sheet[XLSX.utils.encode_cell({ r: rowIdx, c: 0 })];
@@ -36,16 +36,24 @@ export const exportToExcel = async (products) => {
         if (!isCode && cellValue && productMap.has(cellValue)) {
           const product = productMap.get(cellValue);
           
-          // Add barcode column (assuming column 6 or add new column)
+          // Column 8 = Штрихкоды (barcode column)
           if (product.barcode) {
-            const barcodeCell = XLSX.utils.encode_cell({ r: rowIdx, c: 6 });
+            const barcodeCell = XLSX.utils.encode_cell({ r: rowIdx, c: 8 });
             sheet[barcodeCell] = { v: product.barcode, t: 's' };
+            
+            // Also add to the code row (rowIdx + 2)
+            const barcodeCell2 = XLSX.utils.encode_cell({ r: rowIdx + 2, c: 8 });
+            sheet[barcodeCell2] = { v: product.barcode, t: 's' };
           }
           
-          // Update actual quantity in row below (where "Кол." is)
+          // Column 9 = Кол-во пофакту (actual quantity column)
           if (product.actual_quantity !== null && product.actual_quantity !== undefined) {
-            const actualQtyCell = XLSX.utils.encode_cell({ r: rowIdx + 1, c: 3 });
+            const actualQtyCell = XLSX.utils.encode_cell({ r: rowIdx, c: 9 });
             sheet[actualQtyCell] = { v: product.actual_quantity, t: 'n' };
+            
+            // Also add to the code row (rowIdx + 2)
+            const actualQtyCell2 = XLSX.utils.encode_cell({ r: rowIdx + 2, c: 9 });
+            sheet[actualQtyCell2] = { v: product.actual_quantity, t: 'n' };
           }
         }
         
@@ -54,13 +62,6 @@ export const exportToExcel = async (products) => {
         rowIdx++;
       }
     }
-    
-    // Extend range if needed for new column
-    const newRange = {
-      s: { r: range.s.r, c: range.s.c },
-      e: { r: range.e.r, c: Math.max(range.e.c, 6) }
-    };
-    sheet['!ref'] = XLSX.utils.encode_range(newRange);
     
     // Generate file
     const wbout = XLSX.write(workbook, { bookType: 'xls', type: 'array' });
