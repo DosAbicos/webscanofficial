@@ -62,9 +62,16 @@ const Home = () => {
 
   const handleExport = async () => {
     try {
-      const allProducts = await getAllProducts();
-      await exportToExcel(allProducts);
-      toast.success('Файл успешно скачан');
+      // Export only products with barcodes
+      const productsWithBarcodes = await getProductsWithBarcode();
+      
+      if (productsWithBarcodes.length === 0) {
+        toast.error('Нет товаров со штрихкодами для экспорта');
+        return;
+      }
+      
+      await exportToExcel(productsWithBarcodes);
+      toast.success(`Экспортировано товаров: ${productsWithBarcodes.length}`);
     } catch (error) {
       toast.error('Ошибка при экспорте файла');
     }
