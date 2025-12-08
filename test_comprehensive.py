@@ -292,10 +292,11 @@ def test_load_2000_products():
         wb = xlrd.open_workbook(output_file)
         sheet = wb.sheet_by_index(0)
         
-        # Sample check: verify first and last products
+        # Sample check: verify first few products
         sample_checks = [
-            (9, "ТЕСТОВЫЙ ТОВАР #0001", "TEST0000000000000000"),
-            (13, "ТЕСТОВЫЙ ТОВАР #0002", "TEST0000000000000001"),
+            (9, products[0]['name'], "TEST0000000000000000"),
+            (13, products[1]['name'], "TEST0000000000000001"),
+            (17, products[2]['name'], "TEST0000000000000002"),
         ]
         
         all_correct = True
