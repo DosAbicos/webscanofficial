@@ -186,6 +186,17 @@ export const ScannerPage = () => {
     }
 
     try {
+      // Check if barcode is already used by another product
+      const existingProduct = await db.products
+        .where('barcode')
+        .equals(scannedBarcode)
+        .first();
+      
+      if (existingProduct && existingProduct.id !== selectedProduct.id) {
+        toast.error(`Штрихкод уже используется товаром: ${existingProduct.name.substring(0, 40)}...`);
+        return;
+      }
+      
       await updateProductBarcode(
         selectedProduct.id,
         scannedBarcode,
