@@ -52,7 +52,7 @@ def test_excel_export():
     print("\n1. Sending test products to backend...")
     try:
         response = requests.post(
-            'http://localhost:8001/api/test-excel-export',
+            'http://localhost:8001/api/export-excel',
             json=test_products,
             timeout=30
         )
