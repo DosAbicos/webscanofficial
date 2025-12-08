@@ -131,13 +131,23 @@ export const ScannerPage = () => {
       );
       toast.success('Данные сохранены');
       
-      // Reset form
+      // Reset form to step 1
       setScannedBarcode('');
       setSelectedProduct(null);
       setActualQuantity('');
+      setStep(1);
     } catch (error) {
       toast.error('Ошибка сохранения');
     }
+  };
+
+  const handleReset = () => {
+    setScannedBarcode('');
+    setSelectedProduct(null);
+    setActualQuantity('');
+    setSearchQuery('');
+    setSearchResults([]);
+    setStep(1);
   };
 
   if (dbLoading) {
