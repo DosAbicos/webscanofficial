@@ -116,15 +116,26 @@ async def export_excel_debug(products: List[Product]):
                 is_code = clean_name.isdigit()
                 
                 if not is_code and cell_value and cell_value != 'Итого':
-                    if cell_value in product_map:
-                        product = product_map[cell_value]
+                    # Get nomenclature code from 2 rows down
+                    nomenclature_code = ''
+                    if row_idx + 2 < original_sheet.nrows:
+                        code_cell = original_sheet.cell(row_idx + 2, 0)
+                        potential_code = str(code_cell.value).strip()
+                        clean_code = potential_code.replace(' ', '')
+                        if clean_code.isdigit():
+                            nomenclature_code = potential_code
+                    
+                    if nomenclature_code and nomenclature_code in product_map:
+                        product = product_map[nomenclature_code]
                         matches.append({
                             'row': row_idx + 1,
                             'excel_name': cell_value,
+                            'excel_code': nomenclature_code,
                             'db_name': product.name,
+                            'db_code': product.nomenclature_code,
                             'barcode': product.barcode,
                             'actual_qty': product.actual_quantity,
-                            'match_type': 'exact'
+                            'match_type': 'by_code'
                         })
                 
                 row_idx += 2
