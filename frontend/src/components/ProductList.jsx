@@ -9,6 +9,7 @@ import { updateProductBarcode, updateProductActualQuantity, deleteProductBarcode
 import { useNavigate } from 'react-router-dom';
 
 export const ProductList = ({ products, hasBarcode, onUpdate }) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [editingId, setEditingId] = useState(null);
