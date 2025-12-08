@@ -87,19 +87,28 @@ export const ScannerPage = () => {
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
       setSearchResults([]);
       return;
     }
 
     try {
-      const results = await searchProducts(searchQuery);
+      const results = await searchProducts(query);
       setSearchResults(results);
     } catch (error) {
       toast.error('Ошибка поиска');
     }
   };
+
+  useEffect(() => {
+    if (step === 2 && searchQuery) {
+      const debounceTimer = setTimeout(() => {
+        handleSearch(searchQuery);
+      }, 300);
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [searchQuery, step]);
 
   const handleProductSelect = (product) => {
     setSelectedProduct(product);
