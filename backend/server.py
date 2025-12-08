@@ -70,6 +70,87 @@ async def get_status_checks():
     
     return status_checks
 
+
+class Product(BaseModel):
+    id: int
+    name: str
+    nomenclature_code: str
+    stock_quantity: float
+    barcode: Optional[str] = ""
+    actual_quantity: Optional[float] = None
+
+
+@api_router.post("/test-excel-export")
+async def test_excel_export(products: List[Product]):
+    """
+    Test endpoint to verify Excel export maintains original formatting
+    """
+    try:
+        # Load original file
+        original_path = '/app/sample_file.xls'
+        rb = xlrd.open_workbook(original_path, formatting_info=True)
+        wb = xl_copy(rb)
+        sheet = wb.get_sheet(0)
+        
+        # Create product map
+        product_map = {p.name: p for p in products}
+        
+        # Update products in Excel
+        row_idx = 9
+        original_sheet = rb.sheet_by_index(0)
+        
+        while row_idx < original_sheet.nrows:
+            try:
+                cell_a = original_sheet.cell(row_idx, 0)
+                cell_b = original_sheet.cell(row_idx + 1, 1) if row_idx + 1 < original_sheet.nrows else None
+                
+                if not cell_a.value:
+                    row_idx += 1
+                    continue
+                
+                cell_value = str(cell_a.value).strip()
+                next_cell_value = str(cell_b.value).strip() if cell_b else ''
+                
+                if next_cell_value == 'Кол.':
+                    clean_name = cell_value.replace(' ', '')
+                    is_code = clean_name.isdigit()
+                    
+                    if not is_code and cell_value and cell_value in product_map:
+                        product = product_map[cell_value]
+                        
+                        # Write barcode to column 8
+                        if product.barcode:
+                            sheet.write(row_idx, 8, product.barcode)
+                            if row_idx + 2 < original_sheet.nrows:
+                                sheet.write(row_idx + 2, 8, product.barcode)
+                        
+                        # Write actual quantity to column 9
+                        if product.actual_quantity is not None:
+                            sheet.write(row_idx, 9, product.actual_quantity)
+                            if row_idx + 2 < original_sheet.nrows:
+                                sheet.write(row_idx + 2, 9, product.actual_quantity)
+                    
+                    row_idx += 2
+                else:
+                    row_idx += 1
+            except Exception as e:
+                logger.error(f"Error processing row {row_idx}: {e}")
+                row_idx += 1
+        
+        # Save to temporary file
+        output_path = f'/tmp/test_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xls'
+        wb.save(output_path)
+        
+        return FileResponse(
+            output_path,
+            media_type='application/vnd.ms-excel',
+            filename='test_export.xls'
+        )
+    
+    except Exception as e:
+        logger.error(f"Error in test_excel_export: {e}")
+        return {"error": str(e)}
+
 # Include the router in the main app
 app.include_router(api_router)
 
