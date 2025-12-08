@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Barcode, Package, Edit2, Trash2, Save, X } from 'lucide-react';
+import { Search, Barcode, Package, Edit2, Trash2, Save, X, Scan } from 'lucide-react';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
 import { toast } from 'sonner';
 import { updateProductBarcode, updateProductActualQuantity, deleteProductBarcode, searchProducts } from '../lib/db';
+import { useNavigate } from 'react-router-dom';
 
 export const ProductList = ({ products, hasBarcode, onUpdate }) => {
   const [searchQuery, setSearchQuery] = useState('');
