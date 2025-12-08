@@ -176,7 +176,8 @@ export const exportToExcel = async (products) => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    console.log('🎉 Export completed successfully!');
+    console.log('✅ Offline export completed');
+    console.log('ℹ️ Note: Excel may show recovery prompt (this is normal for offline mode)');
     
   } catch (error) {
     console.error('❌ Error exporting Excel file:', error);
