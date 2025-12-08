@@ -222,3 +222,5 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "Starting comprehensive testing of Barcode Manager application. Will test all core functionality including home page, scanner page, data persistence, and mobile responsiveness using Playwright automation."
+  - agent: "testing"
+    message: "TESTING COMPLETED: Scanner page testing revealed critical database initialization issue. While UI/UX is excellent and mobile responsive, the core search functionality fails because database is not initialized when accessing scanner page directly. Home page shows 3223 products loaded correctly, but scanner page shows database as 'not_initialized'. This is a routing/state management issue that needs immediate attention."
