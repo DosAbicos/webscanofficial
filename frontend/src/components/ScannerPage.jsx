@@ -76,11 +76,35 @@ export const ScannerPage = () => {
       await html5QrCodeRef.current.start(
         { facingMode: 'environment' },
         config,
-        (decodedText) => {
+        async (decodedText) => {
           setScannedBarcode(decodedText);
           stopScanner();
-          setStep(2); // Move to product search step
-          toast.success('Штрихкод отсканирован!');
+          
+          // Check if we're in rescan mode
+          const editingProduct = sessionStorage.getItem('editingProduct');
+          if (editingProduct) {
+            // Rescan mode - auto save and return
+            try {
+              const product = JSON.parse(editingProduct);
+              await updateProductBarcode(
+                product.id,
+                decodedText,
+                product.quantity ? parseFloat(product.quantity) : null
+              );
+              toast.success('Штрихкод обновлен!');
+              sessionStorage.removeItem('editingProduct');
+              setTimeout(() => {
+                navigate('/');
+              }, 500);
+            } catch (error) {
+              toast.error('Ошибка обновления штрихкода');
+              console.error(error);
+            }
+          } else {
+            // Normal mode - proceed to step 2
+            setStep(2);
+            toast.success('Штрихкод отсканирован!');
+          }
         },
         (errorMessage) => {
           // Ignore scan errors
