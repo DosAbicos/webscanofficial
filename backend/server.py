@@ -143,8 +143,8 @@ async def export_excel_debug(products: List[Product]):
                 row_idx += 1
         
         # Also find products that didn't match
-        matched_names = {m['db_name'] for m in matches}
-        unmatched = [p for p in products if p.name not in matched_names]
+        matched_codes = {m['db_code'] for m in matches}
+        unmatched = [p for p in products if p.nomenclature_code not in matched_codes]
         
         return {
             'total_received': len(products),
