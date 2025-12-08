@@ -144,11 +144,22 @@ export const ScannerPage = () => {
       );
       toast.success('Данные сохранены');
       
+      // Clear editing product from session storage
+      sessionStorage.removeItem('editingProduct');
+      
+      // Check if we should return to home page (if coming from edit mode)
+      const wasEditing = sessionStorage.getItem('editingProduct') !== null;
+      
       // Reset form to step 1
       setScannedBarcode('');
       setSelectedProduct(null);
       setActualQuantity('');
       setStep(1);
+      
+      // If we were editing, go back to home page
+      if (wasEditing) {
+        navigate('/');
+      }
     } catch (error) {
       toast.error('Ошибка сохранения');
     }
