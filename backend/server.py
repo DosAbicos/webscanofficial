@@ -101,6 +101,12 @@ async def export_excel(products: List[Product]):
         original_sheet = rb.sheet_by_index(0)
         
         logger.info(f"Starting Excel export with {len(products)} products")
+        logger.info(f"Product map has {len(product_map)} entries")
+        
+        # Log first few product names for debugging
+        for i, p in enumerate(products[:3]):
+            logger.info(f"Product {i+1}: '{p.name}' | Barcode: {p.barcode} | Qty: {p.actual_quantity}")
+        
         updated_count = 0
         
         while row_idx < original_sheet.nrows:
