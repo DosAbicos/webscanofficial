@@ -61,6 +61,7 @@ export const ScannerPage = () => {
         (decodedText) => {
           setScannedBarcode(decodedText);
           stopScanner();
+          setStep(2); // Move to product search step
           toast.success('Штрихкод отсканирован!');
         },
         (errorMessage) => {
