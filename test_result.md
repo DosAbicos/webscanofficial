@@ -122,15 +122,18 @@ frontend:
 
   - task: "Product List and Search Functionality"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/components/ProductList.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test product display, search functionality, tabs switching"
+      - working: true
+        agent: "testing"
+        comment: "✅ REVIEW REQUIREMENTS VERIFIED: 'Без штрихкода' tab correctly shows read-only products. Products display name (e.g., 'IDEAL ПАРКЕТНЫЙ ЛАК ГЛЯНЦЕВЫЙ (10L)'), nomenclature code (e.g., '№ 20002755'), and stock quantity. CRITICAL REQUIREMENT MET: Products WITHOUT barcode correctly do NOT have 'По факту' input field, do NOT have 'Редактировать' button, and do NOT have delete button. Search functionality works with real-time filtering. Tab switching functional."
 
   - task: "Product Edit and Save Functionality"
     implemented: true
