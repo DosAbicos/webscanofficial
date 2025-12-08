@@ -218,28 +218,23 @@ async def export_excel(products: List[Product]):
                     if not is_code and cell_value and cell_value != 'Итого':
                         product = None
                         
-                        # Try exact match first
-                        if cell_value in product_map:
-                            product = product_map[cell_value]
-                            logger.debug(f"Exact match: '{cell_value[:40]}'")
+                        # Get nomenclature code from 2 rows down
+                        nomenclature_code = ''
+                        if row_idx + 2 < original_sheet.nrows:
+                            code_cell = original_sheet.cell(row_idx + 2, 0)
+                            potential_code = str(code_cell.value).strip()
+                            clean_code = potential_code.replace(' ', '')
+                            if clean_code.isdigit():
+                                nomenclature_code = potential_code
+                        
+                        # Match by nomenclature code (unique identifier)
+                        if nomenclature_code and nomenclature_code in product_map:
+                            product = product_map[nomenclature_code]
+                            logger.info(f"  ✓ Matched by code: '{cell_value[:40]}' | Code: {nomenclature_code}")
                         else:
-                            # Try flexible matching (for truncated names in Excel)
-                            excel_name_normalized = cell_value.lower().strip()
-                            
-                            for prod_name, prod in product_map.items():
-                                prod_name_normalized = prod_name.lower().strip()
-                                
-                                # Check if they're similar (start with same text)
-                                if len(excel_name_normalized) > 10 and len(prod_name_normalized) > 10:
-                                    # Compare first N characters
-                                    compare_len = min(len(excel_name_normalized), len(prod_name_normalized), 40)
-                                    if excel_name_normalized[:compare_len] == prod_name_normalized[:compare_len]:
-                                        product = prod
-                                        logger.info(f"Flexible match: Excel='{cell_value[:30]}...' DB='{prod_name[:30]}...'")
-                                        break
+                            logger.debug(f"  ✗ No match for code: {nomenclature_code} | Name: '{cell_value[:40]}'")
                         
                         if not product:
-                            logger.debug(f"No match: '{cell_value[:40]}'")
                             row_idx += 2
                             continue
                         
