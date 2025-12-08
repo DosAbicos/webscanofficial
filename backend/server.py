@@ -80,6 +80,72 @@ class Product(BaseModel):
     actual_quantity: Optional[float] = None
 
 
+@api_router.post("/export-excel-debug")
+async def export_excel_debug(products: List[Product]):
+    """Debug endpoint - shows what would be exported without saving"""
+    try:
+        import xlrd
+        
+        original_path = '/app/sample_file.xls'
+        rb = xlrd.open_workbook(original_path)
+        original_sheet = rb.sheet_by_index(0)
+        
+        # Create product map
+        product_map = {p.name: p for p in products}
+        
+        logger.info(f"Debug: Received {len(products)} products")
+        
+        # Find matches
+        matches = []
+        row_idx = 9
+        
+        while row_idx < original_sheet.nrows:
+            cell_a = original_sheet.cell(row_idx, 0)
+            cell_b = original_sheet.cell(row_idx + 1, 1) if row_idx + 1 < original_sheet.nrows else None
+            
+            if not cell_a.value:
+                row_idx += 1
+                continue
+            
+            cell_value = str(cell_a.value).strip()
+            next_cell_value = str(cell_b.value).strip() if cell_b else ''
+            
+            if next_cell_value == 'Кол.':
+                clean_name = cell_value.replace(' ', '')
+                is_code = clean_name.isdigit()
+                
+                if not is_code and cell_value and cell_value != 'Итого':
+                    if cell_value in product_map:
+                        product = product_map[cell_value]
+                        matches.append({
+                            'row': row_idx + 1,
+                            'excel_name': cell_value,
+                            'db_name': product.name,
+                            'barcode': product.barcode,
+                            'actual_qty': product.actual_quantity,
+                            'match_type': 'exact'
+                        })
+                
+                row_idx += 2
+            else:
+                row_idx += 1
+        
+        # Also find products that didn't match
+        matched_names = {m['db_name'] for m in matches}
+        unmatched = [p for p in products if p.name not in matched_names]
+        
+        return {
+            'total_received': len(products),
+            'matches_found': len(matches),
+            'unmatched': len(unmatched),
+            'matches': matches[:20],  # First 20
+            'unmatched_products': [{'name': p.name[:50], 'barcode': p.barcode} for p in unmatched[:10]]
+        }
+    except Exception as e:
+        logger.error(f"Debug error: {e}")
+        return {"error": str(e)}
+
+
 @api_router.post("/export-excel")
 async def export_excel(products: List[Product]):
     """
