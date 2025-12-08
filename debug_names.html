@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Product Names</title>
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3/dist/dexie.min.js"></script>
+</head>
+<body>
+    <h1>Debug Product Names</h1>
+    <div id="output"></div>
+    
+    <script>
+        const db = new Dexie('BarcodeManagerDB');
+        db.version(1).stores({
+            products: '++id, name, nomenclature_code, stock_quantity, barcode, actual_quantity'
+        });
+        
+        async function checkProducts() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Get products with barcodes
+                const productsWithBarcode = await db.products.where('barcode').notEqual('').toArray();
+                
+                output.innerHTML = `<h2>Products with Barcodes: ${productsWithBarcode.length}</h2>`;
+                
+                productsWithBarcode.forEach((p, idx) => {
+                    output.innerHTML += `
+                        <div style="border: 1px solid #ccc; margin: 10px; padding: 10px;">
+                            <strong>Product ${idx + 1}:</strong><br>
+                            ID: ${p.id}<br>
+                            Name: "${p.name}"<br>
+                            Name Length: ${p.name.length}<br>
+                            Barcode: ${p.barcode}<br>
+                            Actual Qty: ${p.actual_quantity}<br>
+                            <pre>Name bytes: ${JSON.stringify(p.name)}</pre>
+                        </div>
+                    `;
+                });
+                
+            } catch (error) {
+                output.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        checkProducts();
+    </script>
+</body>
+</html>
