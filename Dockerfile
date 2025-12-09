@@ -23,11 +23,11 @@ COPY backend/ ./backend/
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 COPY frontend/public/sample_file.xls ./frontend/public/
 
-# Expose port
-EXPOSE 8001
-
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Start backend server
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
+# Railway provides PORT env variable
+ENV PORT=8001
+
+# Start backend server (Railway will set PORT dynamically)
+CMD uvicorn server:app --host 0.0.0.0 --port ${PORT}
