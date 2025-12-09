@@ -330,6 +330,14 @@ async def serve_service_worker():
         return FileResponse(sw_path, media_type="application/javascript")
     return {"detail": "Service worker not found"}
 
+# Serve reset-db.html
+@app.get("/reset-db.html")
+async def serve_reset_db():
+    reset_path = Path(__file__).parent.parent / "frontend" / "public" / "reset-db.html"
+    if reset_path.exists():
+        return FileResponse(reset_path, media_type="text/html")
+    return {"detail": "Reset page not found"}
+
 # Mount static files for React app
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
 if frontend_build_path.exists():
