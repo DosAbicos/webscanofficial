@@ -73,7 +73,7 @@ async def get_status_checks():
 
 
 class Product(BaseModel):
-    id: int
+    id: str  # Changed from int to str to match frontend
     name: str
     nomenclature_code: str
     stock_quantity: float
