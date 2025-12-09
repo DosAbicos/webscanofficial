@@ -81,8 +81,8 @@
                             }
                             
                             if (nomenclatureCode) {
-                                // FIX: Read from column C (index 2) instead of G (index 6)
-                                const stockQty = data[rowIndex] && data[rowIndex][2] ? parseFloat(data[rowIndex][2]) || 0 : 0;
+                                // Read quantity from the row with "Кол." (rowIndex + 1), column C (index 2)
+                                const stockQty = data[rowIndex + 1] && data[rowIndex + 1][2] ? parseFloat(data[rowIndex + 1][2]) || 0 : 0;
                                 
                                 products.push({
                                     id: `product_${nomenclatureCode}`,
