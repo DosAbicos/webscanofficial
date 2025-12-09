@@ -26,8 +26,5 @@ COPY frontend/public/sample_file.xls ./frontend/public/
 # Set working directory to backend
 WORKDIR /app/backend
 
-# Railway provides PORT env variable
-ENV PORT=8001
-
-# Start backend server (Railway will set PORT dynamically)
-CMD uvicorn server:app --host 0.0.0.0 --port ${PORT}
+# Start backend server
+CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8001}"]
