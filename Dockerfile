@@ -22,6 +22,7 @@ COPY backend/ ./backend/
 # Copy built frontend
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 COPY frontend/public/sample_file.xls ./frontend/public/
+COPY frontend/public/service-worker.js ./frontend/public/
 
 # Copy start script
 COPY start.sh /app/start.sh
