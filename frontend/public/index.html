@@ -67,7 +67,7 @@
                                 }
                                 
                                 if (nomenclatureCode) {
-                                    const stockQty = data[rowIndex] && data[rowIndex][6] ? parseFloat(data[rowIndex][6]) || 0 : 0;
+                                    const stockQty = data[rowIndex] && data[rowIndex][2] ? parseFloat(data[rowIndex][2]) || 0 : 0;
                                     
                                     products.push({
                                         id: `product_${nomenclatureCode}`,
