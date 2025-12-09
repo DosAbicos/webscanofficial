@@ -2,8 +2,9 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('BarcodeManagerDB');
 
-db.version(1).stores({
-  products: '++id, name, nomenclature_code, stock_quantity, barcode, actual_quantity'
+// Version 2: Changed primary key from auto-increment to string id
+db.version(2).stores({
+  products: 'id, name, nomenclature_code, stock_quantity, barcode, actual_quantity'
 });
 
 export const initializeDatabase = async (products) => {
