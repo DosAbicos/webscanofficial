@@ -24,63 +24,116 @@
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
-        <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-        <a
-            id="emergent-badge"
-            target="_blank"
-            href="https://app.emergent.sh/?utm_source=emergent-badge"
-            style="
-                display: flex !important;
-                align-items: center !important;
-                position: fixed !important;
-                bottom: 20px;
-                right: 20px;
-                text-decoration: none;
-                padding: 6px 10px;
-                font-family: -apple-system, BlinkMacSystemFont,
-                    &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, Cantarell,
-                    &quot;Open Sans&quot;, &quot;Helvetica Neue&quot;,
-                    sans-serif !important;
-                font-size: 12px !important;
-                z-index: 9999 !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-                border-radius: 8px !important;
-                background-color: #ffffff !important;
-                border: 1px solid rgba(255, 255, 255, 0.25) !important;
-            "
-        >
-            <div
-                style="display: flex; flex-direction: row; align-items: center"
-            >
-                <img
-                    style="width: 20px; height: 20px; margin-right: 8px"
-                    src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4"
-                />
-                <p
-                    style="
-                        color: #000000;
-                        font-family: -apple-system, BlinkMacSystemFont,
-                            &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu,
-                            Cantarell, &quot;Open Sans&quot;,
-                            &quot;Helvetica Neue&quot;, sans-serif !important;
-                        font-size: 12px !important;
-                        align-items: center;
-                        margin-bottom: 0;
-                    "
-                >
-                    Made with Emergent
-                </p>
-            </div>
-        </a>
+        
+        <!-- Load and parse Excel file on first visit -->
+        <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+        <script>
+            // Load Excel file and store in IndexedDB
+            async function loadExcelFile() {
+                try {
+                    const response = await fetch('/sample_file.xls');
+                    const arrayBuffer = await response.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                    
+                    const products = [];
+                    let rowIndex = 9; // Start from row 10
+                    
+                    while (rowIndex < data.length) {
+                        const cellA = data[rowIndex] ? data[rowIndex][0] : '';
+                        const cellB = data[rowIndex + 1] ? data[rowIndex + 1][1] : '';
+                        
+                        if (!cellA) {
+                            rowIndex++;
+                            continue;
+                        }
+                        
+                        const cellValue = String(cellA).trim();
+                        const nextCellValue = String(cellB).trim();
+                        
+                        if (nextCellValue === 'Кол.') {
+                            const cleanName = cellValue.replace(/\s/g, '');
+                            const isCode = /^\d+$/.test(cleanName);
+                            
+                            if (!isCode && cellValue && cellValue !== 'Итого') {
+                                let nomenclatureCode = '';
+                                if (rowIndex + 2 < data.length) {
+                                    const codeCell = data[rowIndex + 2] ? data[rowIndex + 2][0] : '';
+                                    const potentialCode = String(codeCell).trim();
+                                    const cleanCode = potentialCode.replace(/\s/g, '');
+                                    if (/^\d+$/.test(cleanCode)) {
+                                        nomenclatureCode = potentialCode;
+                                    }
+                                }
+                                
+                                if (nomenclatureCode) {
+                                    const stockQty = data[rowIndex] && data[rowIndex][6] ? parseFloat(data[rowIndex][6]) || 0 : 0;
+                                    
+                                    products.push({
+                                        id: `product_${nomenclatureCode}`,
+                                        name: cellValue,
+                                        nomenclature_code: nomenclatureCode,
+                                        stock_quantity: stockQty,
+                                        barcode: '',
+                                        actual_quantity: 0
+                                    });
+                                }
+                            }
+                            rowIndex += 2;
+                        } else {
+                            rowIndex++;
+                        }
+                    }
+                    
+                    return products;
+                } catch (error) {
+                    console.error('Error loading Excel:', error);
+                    return [];
+                }
+            }
+            
+            // Initialize on load
+            window.addEventListener('DOMContentLoaded', async () => {
+                const dbName = 'BarcodeManagerDB';
+                const request = indexedDB.open(dbName, 1);
+                
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('products')) {
+                        db.createObjectStore('products', { keyPath: 'id' });
+                    }
+                };
+                
+                request.onsuccess = async function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['products'], 'readonly');
+                    const store = transaction.objectStore('products');
+                    const countRequest = store.count();
+                    
+                    countRequest.onsuccess = async function() {
+                        if (countRequest.result === 0) {
+                            console.log('Loading Excel file...');
+                            const products = await loadExcelFile();
+                            
+                            if (products.length > 0) {
+                                const writeTransaction = db.transaction(['products'], 'readwrite');
+                                const writeStore = writeTransaction.objectStore('products');
+                                
+                                products.forEach(product => {
+                                    writeStore.add(product);
+                                });
+                                
+                                writeTransaction.oncomplete = function() {
+                                    console.log(`Loaded ${products.length} products`);
+                                    window.location.reload();
+                                };
+                            }
+                        }
+                    };
+                };
+            });
+        </script>
         <script>
             !(function (t, e) {
                 var o, n, p, r;
