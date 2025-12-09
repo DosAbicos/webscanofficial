@@ -314,6 +314,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Serve sample_file.xls
+@app.get("/sample_file.xls")
+async def serve_sample_file():
+    sample_file_path = Path(__file__).parent.parent / "frontend" / "public" / "sample_file.xls"
+    if sample_file_path.exists():
+        return FileResponse(sample_file_path, media_type="application/vnd.ms-excel")
+    return {"detail": "Sample file not found"}
+
 # Mount static files for React app
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
 if frontend_build_path.exists():
