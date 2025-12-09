@@ -322,6 +322,14 @@ async def serve_sample_file():
         return FileResponse(sample_file_path, media_type="application/vnd.ms-excel")
     return {"detail": "Sample file not found"}
 
+# Serve service-worker.js
+@app.get("/service-worker.js")
+async def serve_service_worker():
+    sw_path = Path(__file__).parent.parent / "frontend" / "public" / "service-worker.js"
+    if sw_path.exists():
+        return FileResponse(sw_path, media_type="application/javascript")
+    return {"detail": "Service worker not found"}
+
 # Mount static files for React app
 frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
 if frontend_build_path.exists():
