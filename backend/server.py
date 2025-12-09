@@ -314,6 +314,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Mount static files for React app
+frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
+if frontend_build_path.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_build_path / "static")), name="static")
+    
+    # Serve index.html for all non-API routes
+    @app.get("/{full_path:path}")
+    async def serve_react_app(full_path: str):
+        # Skip API routes
+        if full_path.startswith("api/"):
+            return {"detail": "Not Found"}
+        
+        # Serve index.html for all other routes
+        index_path = frontend_build_path / "index.html"
+        if index_path.exists():
+            return FileResponse(index_path)
+        return {"detail": "Frontend not found"}
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
