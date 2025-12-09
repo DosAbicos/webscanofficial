@@ -23,8 +23,9 @@ COPY backend/ ./backend/
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 COPY frontend/public/sample_file.xls ./frontend/public/
 
-# Set working directory to backend
-WORKDIR /app/backend
+# Copy start script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Start backend server
-CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8001}"]
+CMD ["/app/start.sh"]
