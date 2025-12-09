@@ -305,10 +305,35 @@ export const ScannerPage = () => {
                 )}
               </Button>
 
+              {/* Manual barcode input */}
+              <div className="relative">
+                <p className="text-sm text-muted-foreground mb-2">Или введите штрихкод вручную:</p>
+                <Input
+                  type="text"
+                  placeholder="Введите штрихкод..."
+                  value={scannedBarcode}
+                  onChange={(e) => setScannedBarcode(e.target.value)}
+                  className="font-mono"
+                />
+              </div>
+
               {scannedBarcode && (
                 <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
-                  <p className="text-sm font-medium text-success">Отсканировано:</p>
+                  <p className="text-sm font-medium text-success">Штрихкод:</p>
                   <p className="text-lg font-mono mt-1">{scannedBarcode}</p>
+                  <Button
+                    onClick={() => {
+                      if (!selectedProduct) {
+                        setStep(2);
+                      } else {
+                        // In rescan mode, save directly
+                        handleSave();
+                      }
+                    }}
+                    className="w-full mt-3"
+                  >
+                    {selectedProduct ? 'Сохранить' : 'Продолжить'}
+                  </Button>
                 </div>
               )}
               
