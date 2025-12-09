@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Database</title>
+    <style>
+        body { font-family: Arial; padding: 40px; max-width: 600px; margin: 0 auto; }
+        button { padding: 15px 30px; font-size: 16px; cursor: pointer; margin: 10px; }
+        .success { color: green; }
+        .error { color: red; }
+        #log { background: #f5f5f5; padding: 20px; margin-top: 20px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Reset Database</h1>
+    <p>Это пересоздаст базу данных с правильными количествами товаров.</p>
+    
+    <button onclick="resetDatabase()">Пересоздать базу данных</button>
+    <button onclick="window.location.href='/'">Вернуться на главную</button>
+    
+    <div id="log"></div>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = message;
+            logDiv.appendChild(p);
+        }
+        
+        async function resetDatabase() {
+            log('Начало пересоздания базы данных...', 'info');
+            
+            try {
+                // Delete old databases
+                log('Удаление старых баз данных...', 'info');
+                await indexedDB.deleteDatabase('BarcodeManagerDB');
+                await indexedDB.deleteDatabase('InventoryDB_v2');
+                log('✓ Старые базы удалены', 'success');
+                
+                // Load Excel file
+                log('Загрузка Excel файла...', 'info');
+                const response = await fetch('/sample_file.xls');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                log('✓ Excel файл загружен', 'success');
+                
+                // Parse products
+                log('Парсинг товаров...', 'info');
+                const products = [];
+                let rowIndex = 9;
+                
+                while (rowIndex < data.length) {
+                    const cellA = data[rowIndex] ? data[rowIndex][0] : '';
+                    const cellB = data[rowIndex + 1] ? data[rowIndex + 1][1] : '';
+                    
+                    if (!cellA) {
+                        rowIndex++;
+                        continue;
+                    }
+                    
+                    const cellValue = String(cellA).trim();
+                    const nextCellValue = String(cellB).trim();
+                    
+                    if (nextCellValue === 'Кол.') {
+                        const cleanName = cellValue.replace(/\s/g, '');
+                        const isCode = /^\d+$/.test(cleanName);
+                        
+                        if (!isCode && cellValue && cellValue !== 'Итого') {
+                            let nomenclatureCode = '';
+                            if (rowIndex + 2 < data.length) {
+                                const codeCell = data[rowIndex + 2] ? data[rowIndex + 2][0] : '';
+                                const potentialCode = String(codeCell).trim();
+                                const cleanCode = potentialCode.replace(/\s/g, '');
+                                if (/^\d+$/.test(cleanCode)) {
+                                    nomenclatureCode = potentialCode;
+                                }
+                            }
+                            
+                            if (nomenclatureCode) {
+                                // FIX: Read from column C (index 2) instead of G (index 6)
+                                const stockQty = data[rowIndex] && data[rowIndex][2] ? parseFloat(data[rowIndex][2]) || 0 : 0;
+                                
+                                products.push({
+                                    id: `product_${nomenclatureCode}`,
+                                    name: cellValue,
+                                    nomenclature_code: nomenclatureCode,
+                                    stock_quantity: stockQty,
+                                    barcode: '',
+                                    actual_quantity: 0
+                                });
+                            }
+                        }
+                        rowIndex += 2;
+                    } else {
+                        rowIndex++;
+                    }
+                }
+                
+                log(`✓ Распарсено ${products.length} товаров`, 'success');
+                
+                // Create new database
+                log('Создание новой базы данных...', 'info');
+                const request = indexedDB.open('InventoryDB_v2', 1);
+                
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('products')) {
+                        db.createObjectStore('products', { keyPath: 'id' });
+                    }
+                };
+                
+                request.onsuccess = async function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['products'], 'readwrite');
+                    const store = transaction.objectStore('products');
+                    
+                    log('Сохранение товаров в базу данных...', 'info');
+                    for (const product of products) {
+                        store.add(product);
+                    }
+                    
+                    transaction.oncomplete = function() {
+                        log(`✓ Сохранено ${products.length} товаров`, 'success');
+                        log('✓ База данных успешно пересоздана!', 'success');
+                        log('', 'info');
+                        log('Теперь вернитесь на главную страницу и перезагрузите её', 'info');
+                    };
+                    
+                    transaction.onerror = function() {
+                        log('✗ Ошибка сохранения в базу данных', 'error');
+                    };
+                };
+                
+                request.onerror = function() {
+                    log('✗ Ошибка создания базы данных', 'error');
+                };
+                
+            } catch (error) {
+                log(`✗ Ошибка: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
