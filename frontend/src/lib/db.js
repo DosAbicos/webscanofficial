@@ -1,9 +1,9 @@
 import Dexie from 'dexie';
 
-export const db = new Dexie('BarcodeManagerDB');
+export const db = new Dexie('InventoryDB_v2');
 
-// Version 2: Changed primary key from auto-increment to string id
-db.version(2).stores({
+// Fresh database with string primary key
+db.version(1).stores({
   products: 'id, name, nomenclature_code, stock_quantity, barcode, actual_quantity'
 });
 
